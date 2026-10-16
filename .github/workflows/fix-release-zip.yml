@@ -1,0 +1,54 @@
+# Replaces a release's DesoloZantasDemo.zip with a real zip archive.
+# v0.1.0 shipped a tar file named .zip, which crashes Everest at boot
+# ("End of Central Directory record could not be found").
+name: Fix release zip
+
+on:
+  push:
+    branches: [claude/dreamy-shannon-g5akim]
+    paths: [.github/workflows/fix-release-zip.yml]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to fix
+        default: v0.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag || 'v0.1.0' }}
+      ASSET: DesoloZantasDemo.zip
+    steps:
+      - name: Download current asset
+        run: gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p "$ASSET" -O original
+
+      - name: Repack as zip
+        run: |
+          if python3 -I -c "import sys,zipfile; sys.exit(0 if zipfile.is_zipfile('original') else 1)"; then
+            echo "Asset is already a zip; nothing to do."
+            echo "SKIP=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          mkdir content
+          tar -xf original -C content
+          test -f content/everest.yaml
+          test -f content/bin/DesoloZantasDemo.dll
+          (cd content && zip -qr -9 -X "../$ASSET" .)
+          python3 -I - "$ASSET" <<'PY'
+          import sys, zipfile
+          z = zipfile.ZipFile(sys.argv[1])
+          bad = z.testzip()
+          assert bad is None, f"corrupt entry: {bad}"
+          assert "everest.yaml" in z.namelist()
+          print(len(z.namelist()), "entries OK")
+          PY
+          sha256sum "$ASSET"
+
+      - name: Replace release asset
+        if: env.SKIP != '1'
+        run: gh release upload "$TAG" "$ASSET" -R "$GITHUB_REPOSITORY" --clobber
