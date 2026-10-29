@@ -15,6 +15,22 @@ Drop `DesoloZantasDemo.zip` into `Celeste/Mods` (do not unzip) with the full mod
 
 ## Zip contents
 
-`everest.yaml`, `bin/`, `Audio/`, `Dialog/`, `Graphics/`, `Maps/`, `Loenn/`, `Mountain/`, `Tutorials/`, `Credits.txt`. The source code is not in the zip. Since 0.1.5 the package also leaves out dev-only files: `.ase` sources, `GUIDs.txt`, `Loenn/pcg/` and the `pcg_*.lua` scripts (see `ZippedFilesExclude` in the csproj).
+Since 0.1.6 the demo ships as **two zips**, both under GameBanana's 210 MB upload cap, built by
+`tools/build_release.py` from the `Mods/DesoloZantasDemo` folder:
+
+```
+python -I tools/build_release.py <path to Mods/DesoloZantasDemo> <output folder> <version>
+```
+
+- `DesoloZantasDemo.zip` (about 150 MB): `everest.yaml`, `bin/`, `Dialog/`, `Graphics/`, `Maps/`, `Tutorials/`, `Loenn/`, `Credits.txt`.
+  Its `everest.yaml` depends on `DesoloZantasDemoAudio` at the same version. Only chapter 0 to 4 assets are included: the
+  script drops the `Mountain/` models and `Graphics/Atlases/Mountain/CEL` textures (chapters 0 to 9 use the vanilla mountain),
+  the Checkpoints images of other chapters and sides, the complete-screen atlases of chapters 5+, `FinalCutscenes`, `Memo`,
+  the late-chapter boss sprite folders (with their `Sprites.xml` entries), `.ase` sources, `GUIDs.txt` and `Loenn/pcg`.
+  `dropped_from_main.txt` next to the zips lists every file left out.
+- `DesoloZantasDemoAudio.zip` (about 181 MB): the five demo FMOD banks and a minimal `everest.yaml`
+  (`Name: DesoloZantasDemoAudio`). Upload it to GameBanana first so the main zip's dependency resolves.
+
+The source code is not in either zip. The old single-zip packages (0.1.4, 0.1.5) are 568 MB and can only be hosted on GitHub.
 
 `DesoloZantasDemo_0.1.2_broken_tar_not_zip.tar` in this folder is the 2026-10-14 upload: a tar archive that was named `.zip`. Everest cannot load it. Never upload it again.
